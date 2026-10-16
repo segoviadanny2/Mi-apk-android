@@ -1,0 +1,46 @@
+
+name: Crear APK Android
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'index.html'
+      - '.github/workflows/build-apk.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar proyecto
+        uses: actions/checkout@v4
+
+      - name: Preparar Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Preparar Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Instalar herramientas Android
+        run: sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Instalar Cordova
+        run: npm install -g cordova
+
+      - name: Crear proyecto Android
+        run: |
+          cordova create app com.danny.ventas "Ventas Danny"
+          cp index.html app/www/index.html
+          cd app
+          cordova platform add android@14.0.1
+          cordova build android --debug
+
+      - name: Guardar APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Ventas-Danny-APK
+          path: app/platforms/android/app/build/outputs/apk/debug/app-debug.apk
